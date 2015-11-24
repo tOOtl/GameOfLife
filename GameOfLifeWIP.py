@@ -1,49 +1,39 @@
 # Conway's game of life
 
-import random
-import time
-
-# print the generation and then update the board [could really just add this to main loop]
-def printBoard(board):
-    print(''.join(board))
-    board = newCycle(board)
-    return board
+from random import randint
+from time import sleep
+from copy import deepcopy
 
 # updates the board according to the four rules
 def newCycle(board):
     # create a duplicate of the board to update
-    new = list(board)
-    for i in range(len(board)):
-        if board[i] == '\n':
-            continue
-        else:
-            n = countLiveNeighbours(board, i)
+    new = deepcopy(board)
+    for y in range(boardSize):
+        for x in range(boardSize):
+            n = countLiveNeighbours(board, x, y)
             # activates cells with three neighbours
-            if board[i] == ' ' and n == 3:
-                new[i] = 'X'
+            if board[y][x] == ' ' and n == 3:
+                new[y][x] = 'X'
             # kills over- or underpopulated cells
             elif n < 2 or n > 3:
-                new[i] = ' '
+                new[y][x] = ' '
     return new, board
 
-def countLiveNeighbours(board, i):
-    # generates a list of neighbours, including blanks for any off-board cells. Format [NW, N, NE, W, E, SW, S, SE]
-    if i < 1:
-        neighbours = [' ', ' ', ' ', ' ', board[i + 1], ' ', board[i + 31], board[i + 32], 'top left']
-    elif i < 31:
-        neighbours = [' ', ' ', ' ', board[i - 1], board[i + 1], board[i + 30], board[i + 31], board[i + 32], 'first row']
-    elif i < len(board) - 31:
-        neighbours = [board[i - 32], board[i - 31], board[i - 30], board[i - 1], board[i + 1], board[i + 30], board[i + 31], board[i + 32], 'main']
-    elif i == len(board) - 31:
-        neighbours = [' ', board[i - 31], board[i - 30], ' ', board[i + 1], ' ', ' ', ' ', 'bottom left'] 
-    else:
-        neighbours = [board[i - 32], board[i - 31], board[i - 30], board[i - 1], board[i + 1], ' ', ' ', ' ', 'last row']
-    n = 0
-    for j in neighbours:
-        if j == 'X':
-            n += 1
-# debug statement   print(str(i) + ' ' + str(neighbours) + ' ' + str(n))
-    return n
+          
+# Counts the number of neighbours of a cell that are alive
+def countLiveNeighbours(board, x, y):
+    l = [(y-1, x-1), (y-1, x), (y-1, x+1), (y, x-1), (y, x+1), (y+1, x-1), (y+1, x), (y+1, x+1)] 
+    neighbours = []
+    for i in l:
+        try:
+            if i[0] != -1 and i[1] != -1:
+                neighbours.append(board[i[0]][i[1]])
+            else:
+                raise IndexError
+        except IndexError:
+            neighbours.append(' ')
+    return neighbours.count('X')
+    
 
 # checks to see if the board is in an oscillating state 
 def checkOscillation(history, board):
@@ -58,33 +48,30 @@ def checkOscillation(history, board):
             return 0
             
 
-# initialise the board to a blank grid
-board = list((' ' * 30 + '\n') * 30)
+# SETTINGS
 
-'''
-# oscillator test - toad (de-activate random populator before use):
-board[42] = 'X'
-board[43] = 'X'
-board[44] = 'X'
-board[54] = 'X'
-board[55] = 'X'
-board[56] = 'X'
-'''
+maxGenerations = 100 # max number of generations that the game will run for
+boardSize = 30 # length of each side of the board (board is a square)
+maxPopulation = 300 # max number of initial live cells
+minPopulation = 100 # minimum number of initial live cells
+sleepTime = 0.1 # time in seconds between each update of the board
+
+# initialise the board to a blank grid
+board = [list(' '*boardSize) for x in range(boardSize)] # board as a list of lists, can use [y][x] as a co-ordinate ref
 
 # populate the board with a random number of live cells in random positions
-for i in range(random.randint(0, 300)):
-    index = random.randint(0, 929)
-    if board[index] == '\n':
-        continue
-    else:
-        board[index] = 'X'
+for i in range(randint(minPopulation, maxPopulation)):
+    (y, x) = randint(0, boardSize - 1), randint(0, boardSize - 1)
+    board[y][x] = 'X'
 
-# initialise the count of generations and execute the main loop   
+# initialise the count of generations and the history, which is used to detect oscillators  
 generations = 0
 history = []
 
-while generations < 100: # manually enter no. of generations here
-    board, oldBoard = printBoard(board)
+# main loop
+while generations < maxGenerations:
+    print('\n'.join([''.join(x) for x in board]) + '\n')
+    board, oldBoard = newCycle(board)
     if board == oldBoard:
         print('Static')
         break
@@ -92,6 +79,5 @@ while generations < 100: # manually enter no. of generations here
     if checkOscillation(history, board) == 0:
         print('Oscillator reached')
         break
-    time.sleep(0.1) # enter the time taken for each generation here
+    sleep(sleepTime)
     generations += 1
-
