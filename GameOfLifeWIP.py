@@ -6,26 +6,29 @@ from copy import deepcopy
 
 # updates the board according to the four rules
 def newCycle(board):
-    # update the dying and newborn tiles into alive and dead tiles
-    for y in range(boardSize):
-        for x in range(boardSize):
-            if board[y][x] == '-':
-                board[y][x] = ' '
-            elif board[y][x] == 'x':
-                board[y][x] = 'X'
+    board = stripGraphics(board)
     # create a duplicate of the board to update
     new = deepcopy(board)
     for y in range(boardSize):
         for x in range(boardSize):
             n = countLiveNeighbours(board, x, y)
             # activates cells with three neighbours
-            if board[y][x] == ' ' and n == 3:
-                new[y][x] = 'x'
+            if board[y][x] == g['dead'] and n == 3:
+                new[y][x] = g['newborn']
             # kills over- or underpopulated cells
-            elif board[y][x] == 'X' and (n < 2 or n > 3):
-                new[y][x] = '-'
+            elif board[y][x] == g['live'] and (n < 2 or n > 3):
+                new[y][x] = g['dying']
     return new, board
 
+# update the dying and newborn tiles into alive and dead tiles
+def stripGraphics(board):
+    for y in range(boardSize):
+        for x in range(boardSize):
+            if board[y][x] == g['dying']:
+                board[y][x] = g['dead']
+            elif board[y][x] == g['newborn']:
+                board[y][x] = g['live']
+    return board
           
 # Counts the number of neighbours of a cell that are alive
 def countLiveNeighbours(board, x, y):
@@ -38,8 +41,8 @@ def countLiveNeighbours(board, x, y):
             else:
                 raise IndexError
         except IndexError:
-            neighbours.append(' ')
-    return neighbours.count('X')
+            neighbours.append(g['dead'])
+    return neighbours.count(g['live'])
     
 
 # checks to see if the board is in an oscillating state 
@@ -51,31 +54,39 @@ def checkOscillation(history, board):
     for i in range(1, oscillationRange):
         if len(history) < 2*i:
             break
-        elif board == history[-i] == history[-2*i]:
+        elif stripGraphics(deepcopy(board)) == history[-i] == history[-2*i]:
             return 0
             
 
-# SETTINGS
+### SETTINGS ###
 
-maxGenerations = 60 # max number of generations that the game will run for
-boardSize = 20 # length of each side of the board (board is a square)
-maxPopulation = (boardSize**2)*0.7 # max number of initial live cells (default 70% of board)
-minPopulation = (boardSize**2)*0.1 # minimum number of initial live cells (default 10% of board)
+maxGenerations = 100 # max number of generations that the game will run for
+boardSize = 25 # length of each side of the board (board is a square)
+maxPopulation = (boardSize**2)//1.25 # max number of initial live cells (default 80% of board)
+minPopulation = (boardSize**2)//10 # minimum number of initial live cells (default 10% of board)
 sleepTime = 0.2 # time in seconds between each update of the board
+graphics = g = {'live':'H', 'dead':' ','newborn':'|', 'dying':'-'} # characters used for each cell state
+
+### INITIALISATIONS ###
 
 # initialise the board to a blank grid
-board = [list(' '*boardSize) for x in range(boardSize)] # board as a list of lists, can use [y][x] as a co-ordinate ref
+board = [list(g['dead']*boardSize) for x in range(boardSize)] # board as a list of lists, can use [y][x] as a co-ordinate ref
 
 # populate the board with a random number of live cells in random positions
 for i in range(randint(minPopulation, maxPopulation)):
     (y, x) = randint(0, boardSize - 1), randint(0, boardSize - 1)
-    board[y][x] = 'X'
-
+    board[y][x] = g['live']
+'''
+# oscillator test
+for f in range(3):
+    board[2][f] = g['live']
+'''
 # initialise the count of generations, and the history, which is used to detect oscillators  
 generations = 0
 history = []
 
-# main loop
+### MAIN LOOP ###
+
 while generations < maxGenerations:
     print('\n'.join([''.join(x) for x in board]) + '\n')
     board, oldBoard = newCycle(board)
