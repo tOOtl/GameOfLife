@@ -6,6 +6,13 @@ from copy import deepcopy
 
 # updates the board according to the four rules
 def newCycle(board):
+    # update the dying and newborn tiles into alive and dead tiles
+    for y in range(boardSize):
+        for x in range(boardSize):
+            if board[y][x] == '-':
+                board[y][x] = ' '
+            elif board[y][x] == 'x':
+                board[y][x] = 'X'
     # create a duplicate of the board to update
     new = deepcopy(board)
     for y in range(boardSize):
@@ -13,10 +20,10 @@ def newCycle(board):
             n = countLiveNeighbours(board, x, y)
             # activates cells with three neighbours
             if board[y][x] == ' ' and n == 3:
-                new[y][x] = 'X'
+                new[y][x] = 'x'
             # kills over- or underpopulated cells
-            elif n < 2 or n > 3:
-                new[y][x] = ' '
+            elif board[y][x] == 'X' and (n < 2 or n > 3):
+                new[y][x] = '-'
     return new, board
 
           
@@ -50,11 +57,11 @@ def checkOscillation(history, board):
 
 # SETTINGS
 
-maxGenerations = 100 # max number of generations that the game will run for
-boardSize = 40 # length of each side of the board (board is a square)
+maxGenerations = 60 # max number of generations that the game will run for
+boardSize = 20 # length of each side of the board (board is a square)
 maxPopulation = (boardSize**2)*0.7 # max number of initial live cells (default 70% of board)
 minPopulation = (boardSize**2)*0.1 # minimum number of initial live cells (default 10% of board)
-sleepTime = 0.1 # time in seconds between each update of the board
+sleepTime = 0.2 # time in seconds between each update of the board
 
 # initialise the board to a blank grid
 board = [list(' '*boardSize) for x in range(boardSize)] # board as a list of lists, can use [y][x] as a co-ordinate ref
@@ -64,7 +71,7 @@ for i in range(randint(minPopulation, maxPopulation)):
     (y, x) = randint(0, boardSize - 1), randint(0, boardSize - 1)
     board[y][x] = 'X'
 
-# initialise the count of generations and the history, which is used to detect oscillators  
+# initialise the count of generations, and the history, which is used to detect oscillators  
 generations = 0
 history = []
 
