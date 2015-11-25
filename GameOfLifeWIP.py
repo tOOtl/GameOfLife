@@ -51,9 +51,9 @@ def checkOscillation(history, board):
 # SETTINGS
 
 maxGenerations = 100 # max number of generations that the game will run for
-boardSize = 30 # length of each side of the board (board is a square)
-maxPopulation = 300 # max number of initial live cells
-minPopulation = 100 # minimum number of initial live cells
+boardSize = 40 # length of each side of the board (board is a square)
+maxPopulation = (boardSize**2)*0.7 # max number of initial live cells (default 70% of board)
+minPopulation = (boardSize**2)*0.1 # minimum number of initial live cells (default 10% of board)
 sleepTime = 0.1 # time in seconds between each update of the board
 
 # initialise the board to a blank grid
