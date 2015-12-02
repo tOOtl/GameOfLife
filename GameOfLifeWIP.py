@@ -38,7 +38,7 @@ def printBoard(display, history):
 
 # Counts the number of neighbours of a cell that are alive
 def countLiveNeighbours(board, x, y):
-    l = [(y-1, x-1), (y-1, x), (y-1, x+1), (y, x-1), (y, x+1), (y+1, x-1), (y+1, x), (y+1, x+1)] 
+    l = [(n, m) for n in [y-1, y, y+1] for m in [x-1, x, x+1] if (n, m) != (y, x)]
     neighbours = []
     for i in l:
         try:
@@ -66,11 +66,11 @@ def checkOscillation(history, board):
 
 ### SETTINGS ###
 
-maxGenerations = 100 # max number of generations that the game will run for
-boardSize = 25 # length of each side of the board (board is a square)
+maxGenerations = 1000 # max number of generations that the game will run for (first 2 gens will not display)
+boardSize = 30 # length of each side of the board (board is a square)
 maxPopulation = (boardSize**2)//1.25 # max number of initial live cells (default 80% of board)
-minPopulation = (boardSize**2)//10 # minimum number of initial live cells (default 10% of board)
-sleepTime = 0.2 # time in seconds between each update of the board
+minPopulation = (boardSize**2)//5 # minimum number of initial live cells (default 20% of board)
+sleepTime = 0.005 # time in seconds between each update of the board
 graphics = g = {'live':'X', 'dead':' ','newborn':'x', 'dying':'-'} # characters used for each cell state
 
 ### INITIALISATIONS ###
@@ -95,14 +95,14 @@ history = []
 
 while generations < maxGenerations:
     if generations > 1:
-        printBoard(deepcopy(board), history) 
+        printBoard(deepcopy(board), history)
     board, oldBoard = newCycle(board)
     if board == oldBoard:
-        print('Static')
+        print('Static at generation %s' % (generations - 1))
         break
     history.append(oldBoard)
     if checkOscillation(history, board) == 0:
-        print('Oscillator reached')
+        print('Oscillator reached at generation %s' % (generations - 1))
         break
     sleep(sleepTime)
     generations += 1
